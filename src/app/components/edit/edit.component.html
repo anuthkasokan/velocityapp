@@ -58,8 +58,8 @@
             <div class="mb-3">
               <label for="genre" class="form-label">Genre *</label>
               <select id="genre" formControlName="genre" class="form-select" [class.is-invalid]="gameForm.get('genre')?.invalid && gameForm.get('genre')?.touched">
-                <option [ngValue]="null">Select genre</option>
-                <option *ngFor="let g of genres$ | async" [ngValue]="g">{{ g.name }}</option>
+                <option value="">Select genre</option>
+                <option *ngFor="let g of genres$ | async" [value]="g.id">{{ g.name }}</option>
               </select>
               <div class="invalid-feedback">
                 Genre is required.
@@ -69,8 +69,8 @@
             <div class="mb-3">
               <label for="publisher" class="form-label">Publisher *</label>
               <select id="publisher" formControlName="publisher" class="form-select" [class.is-invalid]="gameForm.get('publisher')?.invalid && gameForm.get('publisher')?.touched">
-                <option [ngValue]="null">Select publisher</option>
-                <option *ngFor="let p of publishers$ | async" [ngValue]="p">{{ p.name }}</option>
+                <option value="">Select publisher</option>
+                <option *ngFor="let p of publishers$ | async" [value]="p.id">{{ p.name }}</option>
               </select>
               <div class="invalid-feedback">
                 Publisher is required.
@@ -80,8 +80,8 @@
             <div class="mb-3">
               <label for="developer" class="form-label">Developer *</label>
               <select id="developer" formControlName="developer" class="form-select" [class.is-invalid]="gameForm.get('developer')?.invalid && gameForm.get('developer')?.touched">
-                <option [ngValue]="null">Select developer</option>
-                <option *ngFor="let d of developers$ | async" [ngValue]="d">{{ d.name }}</option>
+                <option value="">Select developer</option>
+                <option *ngFor="let d of developers$ | async" [value]="d.id">{{ d.name }}</option>
               </select>
               <div class="invalid-feedback">
                 Developer is required.

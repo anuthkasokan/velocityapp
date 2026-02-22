@@ -3,9 +3,12 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { take } from 'rxjs/operators';
-import { forkJoin, of } from 'rxjs';
-import { VideoGame, Genre, Publisher, Developer } from '../../models/video-game.model';
+import { forkJoin } from 'rxjs';
+import { Genre, Publisher, Developer } from '../../models/video-game.model';
 import { Observable } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { Actions, ofType } from '@ngrx/effects';
+import * as GamesActions from '../../store/actions';
 import { VideoGameService } from '../../services/video-game.service';
 import { GenreService } from '../../services/genre.service';
 import { PublisherService } from '../../services/publisher.service';
@@ -29,6 +32,8 @@ export class EditComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
+    private store: Store<any>,
+    private actions$: Actions,
     private gameService: VideoGameService,
     private route: ActivatedRoute,
     private router: Router,
@@ -53,105 +58,71 @@ export class EditComponent implements OnInit {
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
-
-    // Load lookup lists first, then (if editing) load the game and map lookups
     const loadLookups$ = forkJoin([
-      this.genreService.getAll().pipe(take(1)),
-      this.publisherService.getAll().pipe(take(1)),
-      this.developerService.getAll().pipe(take(1))
+      this.genreService.getAll(),
+      this.publisherService.getAll(),
+      this.developerService.getAll()
     ]);
 
-    if (id && id !== 'new') {
-      this.isNewGame = false;
-      this.gameId = +id;
+    loadLookups$.pipe(take(1)).subscribe({
+      next: () => {
+        if (id && id !== 'new') {
+          this.isNewGame = false;
+          this.gameId = +id;
+          this.loadGame();
+        }
+      },
+      error: (err) => console.error('Failed to load lookups', err)
+    });
+  }
 
-      loadLookups$
-        .pipe(take(1))
-        .subscribe({
-          next: () => {
-            this.gameService.getGameById(this.gameId!).pipe(take(1)).subscribe({
-              next: (game) => {
-                if (!game) {
-                  this.router.navigate(['/']);
-                  return;
-                }
+  private loadGame(): void {
+    this.gameService.getGameById(this.gameId!).pipe(take(1)).subscribe({
+      next: (game) => {
+        if (game) this.patchFormWithGame(game);
+        else this.router.navigate(['/']);
+      },
+      error: () => this.router.navigate(['/'])
+    });
+  }
 
-                // Map genre/publisher/developer to the lookup objects so selects show correctly
-                const mapLookup = (val: any, list$: Observable<any[]>): any => {
-                  if (!val) return null;
-                  // If backend returned an object with id
-                  const id = typeof val === 'number' ? val : val.id ?? null;
-                  let found: any = null;
-                  // get current snapshot of the list from the BehaviorSubject by subscribing synchronously
-                  // lists are already loaded into the services' subjects
-                  list$.pipe(take(1)).subscribe((arr) => {
-                    found = arr.find((x: any) => x.id === id) ?? (typeof val === 'object' ? val : null);
-                  });
-                  return found;
-                };
-
-                const mappedGenre = mapLookup((game as any).genre, this.genreService.genres$);
-                const mappedPublisher = mapLookup((game as any).publisher, this.publisherService.publishers$);
-                const mappedDeveloper = mapLookup((game as any).developer, this.developerService.developers$);
-
-                this.gameForm.patchValue({
-                  ...game,
-                  releaseDate: this.datePipe.transform((game as any).releaseDate, 'yyyy-MM-dd'),
-                  genre: mappedGenre,
-                  publisher: mappedPublisher,
-                  developer: mappedDeveloper
-                });
-              },
-              error: (err) => {
-                console.error('Failed to load game', err);
-                this.router.navigate(['/']);
-              }
-            });
-          },
-          error: (err) => {
-            console.error('Failed to load lookups', err);
-            // Still attempt to load game even if lookups fail
-            this.gameService.getGameById(this.gameId!).pipe(take(1)).subscribe({
-              next: (game) => {
-                if (game) {
-                  this.gameForm.patchValue({
-                    ...game,
-                    releaseDate: this.datePipe.transform((game as any).releaseDate, 'yyyy-MM-dd')
-                  });
-                } else this.router.navigate(['/']);
-              },
-              error: () => this.router.navigate(['/'])
-            });
-          }
-        });
-    } else {
-      // New game: just load lookups
-      loadLookups$.pipe(take(1)).subscribe({ next: () => {}, error: (err) => console.error('Failed to load lookups', err) });
-    }
+  private patchFormWithGame(game: any): void {
+    this.gameForm.patchValue({
+      title: game.title,
+      description: game.description,
+      releaseDate: this.datePipe.transform(game.releaseDate, 'yyyy-MM-dd'),
+      genre: game.genre?.id,
+      publisher: game.publisher?.id,
+      developer: game.developer?.id
+    });
   }
 
   onSubmit(): void {
     if (!this.gameForm.valid) return;
     
-    const { title, description, releaseDate, genre, publisher, developer } = this.gameForm.value;
-    
+    let { title, description, releaseDate, genre, publisher, developer } = this.gameForm.value;
+
     const payload = {
       ...(this.isNewGame ? {} : { id: this.gameId }),
       title,
-      description: description ?? null,
+      description,
       releaseDate: this.datePipe.transform(releaseDate, 'yyyy-MM-dd'),
-      genreId: genre?.id ?? null,
-      publisherId: publisher?.id ?? null,
-      developerId: developer?.id ?? null
+      genreId: genre,
+      publisherId: publisher,
+      developerId: developer
     };
 
-    const save$ = this.isNewGame 
-      ? this.gameService.addGame(payload) 
-      : this.gameService.updateGame(payload);
+    const action = this.isNewGame 
+      ? GamesActions.addGame({ game: payload as any })
+      : GamesActions.updateGame({ game: payload as any });
 
-    save$.pipe(take(1)).subscribe({
-      next: () => this.router.navigate(['/']),
-      error: (err) => console.error('Save failed', err)
+    this.store.dispatch(action);
+    this.actions$.pipe(
+      ofType(GamesActions.loadGamesSuccess, GamesActions.addGameFailure, GamesActions.updateGameFailure),
+      take(1)
+    ).subscribe((result: any) => {
+      if (result.type === GamesActions.loadGamesSuccess.type) this.router.navigate(['/']);
+      else console.error('Save failed', result.error);
     });
   }
 

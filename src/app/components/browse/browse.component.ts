@@ -2,9 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Observable } from 'rxjs';
-import { take } from 'rxjs/operators';
 import { VideoGame } from '../../models/video-game.model';
-import { VideoGameService } from '../../services/video-game.service';
+import { Store } from '@ngrx/store';
+import * as GamesActions from '../../store/actions';
+import * as GamesSelectors from '../../store/selectors';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
@@ -16,22 +17,16 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 export class BrowseComponent implements OnInit {
   games$: Observable<VideoGame[]| []>;
 
-  constructor(private gameService: VideoGameService) {
-    this.games$ = this.gameService.games$;
+  constructor(private store: Store) {
+    this.games$ = this.store.select(GamesSelectors.selectAllGames);
   }
 
   ngOnInit(): void {
-    this.gameService.getGames().pipe(take(1)).subscribe({
-      next: () => {},
-      error: (err) => console.error('Failed to load games', err)
-    });
+    this.store.dispatch(GamesActions.loadGames());
   }
 
   deleteGame(id: number): void {
     if (!confirm('Are you sure you want to delete this game?')) return;
-    this.gameService.deleteGame(id).pipe(take(1)).subscribe({
-      next: () => {},
-      error: (err) => console.error('Delete failed', err)
-    });
+    this.store.dispatch(GamesActions.deleteGame({ id }));
   }
 }
