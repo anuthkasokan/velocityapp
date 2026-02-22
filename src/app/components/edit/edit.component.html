@@ -1,0 +1,104 @@
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card shadow">
+        <div class="card-header">
+          <h2 class="mb-0">{{ isNewGame ? 'Add New Game' : 'Edit Game' }}</h2>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="gameForm" (ngSubmit)="onSubmit()">
+            <div class="mb-3">
+              <label for="title" class="form-label">Title *</label>
+              <input
+                type="text"
+                id="title"
+                formControlName="title"
+                class="form-control"
+                [class.is-invalid]="gameForm.get('title')?.invalid && gameForm.get('title')?.touched"
+              />
+              <div class="invalid-feedback" *ngIf="gameForm.get('title')?.errors?.['required']">
+                Title is required.
+              </div>
+              <div class="invalid-feedback" *ngIf="gameForm.get('title')?.errors?.['minlength']">
+                Title must be at least 2 characters.
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="description" class="form-label">Description *</label>
+              <textarea
+                id="description"
+                formControlName="description"
+                class="form-control"
+                rows="3"
+                [class.is-invalid]="gameForm.get('description')?.invalid && gameForm.get('description')?.touched"
+              ></textarea>
+              <div class="invalid-feedback" *ngIf="gameForm.get('description')?.errors?.['required']">
+                Description is required.
+              </div>
+              <div class="invalid-feedback" *ngIf="gameForm.get('description')?.errors?.['minlength']">
+                Description must be at least 10 characters.
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="releaseDate" class="form-label">Release Date *</label>
+              <input
+                type="date"
+                id="releaseDate"
+                formControlName="releaseDate"
+                class="form-control"
+                [class.is-invalid]="gameForm.get('releaseDate')?.invalid && gameForm.get('releaseDate')?.touched"
+              />
+              <div class="invalid-feedback">
+                Release date is required.
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="genre" class="form-label">Genre *</label>
+              <select id="genre" formControlName="genre" class="form-select" [class.is-invalid]="gameForm.get('genre')?.invalid && gameForm.get('genre')?.touched">
+                <option [ngValue]="null">Select genre</option>
+                <option *ngFor="let g of genres$ | async" [ngValue]="g">{{ g.name }}</option>
+              </select>
+              <div class="invalid-feedback">
+                Genre is required.
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="publisher" class="form-label">Publisher *</label>
+              <select id="publisher" formControlName="publisher" class="form-select" [class.is-invalid]="gameForm.get('publisher')?.invalid && gameForm.get('publisher')?.touched">
+                <option [ngValue]="null">Select publisher</option>
+                <option *ngFor="let p of publishers$ | async" [ngValue]="p">{{ p.name }}</option>
+              </select>
+              <div class="invalid-feedback">
+                Publisher is required.
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="developer" class="form-label">Developer *</label>
+              <select id="developer" formControlName="developer" class="form-select" [class.is-invalid]="gameForm.get('developer')?.invalid && gameForm.get('developer')?.touched">
+                <option [ngValue]="null">Select developer</option>
+                <option *ngFor="let d of developers$ | async" [ngValue]="d">{{ d.name }}</option>
+              </select>
+              <div class="invalid-feedback">
+                Developer is required.
+              </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-4">
+              <button type="submit" class="btn btn-primary flex-fill" [disabled]="gameForm.invalid">
+                {{ isNewGame ? 'Add Game' : 'Update Game' }}
+              </button>
+              <button type="button" class="btn btn-secondary flex-fill" (click)="onCancel()">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
