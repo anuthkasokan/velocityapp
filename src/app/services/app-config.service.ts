@@ -13,24 +13,15 @@ import { Injectable } from '@angular/core';
 import appConfig from '../../configuration/app.config.json';
 
 @Injectable({
-  providedIn: 'root'  // Singleton service
+  providedIn: 'root'
 })
 export class AppConfigService {
-  private config = appConfig;  // Load configuration from JSON
+  private config = appConfig;
 
-  /**
-   * Get API Base URL
-   * Example: http://localhost:3000/api
-   */
   get apiBaseUrl(): string {
     return this.config.apiBaseUrl;
   }
 
-  /**
-   * Build Full API Endpoint
-   * @param path - API path segment (e.g., 'games', 'genres')
-   * @returns Full URL (e.g., 'http://localhost:3000/api/games')
-   */
   api(path: string): string {
     return `${this.apiBaseUrl}/${path}`;
   }

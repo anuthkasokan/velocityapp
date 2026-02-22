@@ -10,11 +10,10 @@ import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet], // Standalone: directly import dependencies
+  imports: [RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
 export class App {
-  // Angular signal for reactive title (modern state management)
   protected readonly title = signal('videogamecatalogapp');
 }

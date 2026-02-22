@@ -14,62 +14,39 @@ import { VideoGame } from '../models/video-game.model';
 import { AppConfigService } from './app-config.service';
 
 @Injectable({
-  providedIn: 'root'  // Single instance shared across the app
+  providedIn: 'root'
 })
 export class VideoGameService {
 
-  constructor(
-    private http: HttpClient,  // Angular HTTP client for REST calls
-    private configService: AppConfigService  // Provides API base URL
-  ) {}
+  constructor(private http: HttpClient, private configService: AppConfigService) {}
 
-  /**
-   * Get All Games
-   * GET /api/games
-   * Returns empty array on error instead of throwing
-   */
   getGames(): Observable<VideoGame[]> {
     return this.http.get<VideoGame[]>(this.configService.api('games')).pipe(
       catchError((err) => {
         console.error('Failed to fetch games', err);
-        return of([]);  // Return empty array on error
+        return of([]);
       })
     );
   }
 
-  /**
-   * Get Game By ID
-   * GET /api/games/:id
-   * Returns null on error (game not found or API failure)
-   */
   getGameById(id: number): Observable<VideoGame | null> {
     return this.http.get<VideoGame>(this.configService.api(`games/${id}`)).pipe(
       catchError((err) => {
         console.error(`Failed to fetch game ${id}`, err);
-        return of(null);  // Return null if not found
+        return of(null);
       })
     );
   }
 
-  /**
-   * Add New Game
-   * POST /api/games
-   * Returns the created game with ID assigned by backend
-   */
   addGame(game: any): Observable<VideoGame> {
     return this.http.post<VideoGame>(this.configService.api('games'), game).pipe(
       catchError((err) => {
         console.error('Failed to add game', err);
-        return of(game as VideoGame);  // Return original object on error
+        return of(game as VideoGame);
       })
     );
   }
 
-  /**
-   * Update Existing Game
-   * PUT /api/games/:id
-   * Returns the updated game or null on error
-   */
   updateGame(game: any): Observable<VideoGame | null> {
     return this.http.put<VideoGame>(this.configService.api(`games/${game.id}`), game).pipe(
       catchError((err) => {
@@ -79,17 +56,12 @@ export class VideoGameService {
     );
   }
 
-  /**
-   * Delete Game
-   * DELETE /api/games/:id
-   * Returns boolean: true if deleted, false on error
-   */
   deleteGame(id: number): Observable<boolean> {
     return this.http.delete<void>(this.configService.api(`games/${id}`)).pipe(
-      map(() => true),  // Convert void response to success boolean
+      map(() => true),
       catchError((err) => {
         console.error(`Failed to delete game ${id}`, err);
-        return of(false);  // Return false on error
+        return of(false);
       })
     );
   }

@@ -32,33 +32,30 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 @Component({
   selector: 'app-edit',
   imports: [CommonModule, RouterModule, ReactiveFormsModule, NgbModule],
-  providers: [DatePipe],  // DatePipe for formatting dates
+  providers: [DatePipe],
   templateUrl: './edit.component.html',
   styleUrls: ['./edit.component.scss']
 })
 export class EditComponent implements OnInit {
-  gameForm: FormGroup;  // Reactive form instance
-  isNewGame = true;     // Flag: true for create, false for update
-  gameId?: number;      // Game ID when editing existing game
-  
-  // Observable streams for dropdown options
+  gameForm: FormGroup;
+  isNewGame = true;
+  gameId?: number;
   genres$!: Observable<Genre[]>;
   publishers$!: Observable<Publisher[]>;
   developers$!: Observable<Developer[]>;
 
   constructor(
-    private fb: FormBuilder,              // For building reactive forms
-    private store: Store<any>,            // NgRx store for dispatching actions
-    private actions$: Actions,             // For listening to action results
-    private gameService: VideoGameService, // API service for fetching game data
-    private route: ActivatedRoute,        // For reading route parameters
-    private router: Router,               // For navigation
+    private fb: FormBuilder,
+    private store: Store<any>,
+    private actions$: Actions,
+    private gameService: VideoGameService,
+    private route: ActivatedRoute,
+    private router: Router,
     private genreService: GenreService,
     private publisherService: PublisherService,
     private developerService: DeveloperService,
-    private datePipe: DatePipe            // For date formatting
+    private datePipe: DatePipe
   ) {
-    // Initialize form with validators
     this.gameForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(2)]],
       description: ['', [Validators.required, Validators.minLength(10)]],
@@ -68,22 +65,13 @@ export class EditComponent implements OnInit {
       developer: [null, Validators.required]
     });
 
-    // Set up observable streams for dropdowns
     this.genres$ = this.genreService.genres$;
     this.publishers$ = this.publisherService.publishers$;
     this.developers$ = this.developerService.developers$;
   }
 
-  /**
-   * Component Initialization
-   * 1. Load lookup data (genres, publishers, developers) in parallel
-   * 2. Check route param to determine create vs edit mode
-   * 3. If editing, load game data and populate form
-   */
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
-    
-    // forkJoin: Wait for all 3 API calls to complete before proceeding
     const loadLookups$ = forkJoin([
       this.genreService.getAll(),
       this.publisherService.getAll(),
@@ -92,10 +80,9 @@ export class EditComponent implements OnInit {
 
     loadLookups$.pipe(take(1)).subscribe({
       next: () => {
-        // After lookups loaded, check if we're editing
         if (id && id !== 'new') {
           this.isNewGame = false;
-          this.gameId = +id;  // Convert string to number
+          this.gameId = +id;
           this.loadGame();
         }
       },
@@ -103,25 +90,16 @@ export class EditComponent implements OnInit {
     });
   }
 
-  /**
-   * Load Game Data for Editing
-   * Fetches game by ID and populates the form
-   * Navigates to home if game not found
-   */
   private loadGame(): void {
     this.gameService.getGameById(this.gameId!).pipe(take(1)).subscribe({
       next: (game) => {
         if (game) this.patchFormWithGame(game);
-        else this.router.navigate(['/']);  // Game not found
+        else this.router.navigate(['/']);
       },
-      error: () => this.router.navigate(['/'])  // API error
+      error: () => this.router.navigate(['/'])
     });
   }
 
-  /**
-   * Populate Form with Game Data
-   * Converts related entities (genre, publisher, developer) to IDs for dropdowns
-   */
   private patchFormWithGame(game: any): void {
     this.gameForm.patchValue({
       title: game.title,
@@ -133,19 +111,13 @@ export class EditComponent implements OnInit {
     });
   }
 
-  /**
-   * Form Submit Handler
-   * Dispatches appropriate action (add or update) based on mode
-   * Listens for success/failure and navigates accordingly
-   */
   onSubmit(): void {
-    if (!this.gameForm.valid) return;  // Don't submit invalid form
+    if (!this.gameForm.valid) return;
     
     let { title, description, releaseDate, genre, publisher, developer } = this.gameForm.value;
 
-    // Build payload with IDs instead of full objects
     const payload = {
-      ...(this.isNewGame ? {} : { id: this.gameId }),  // Include ID only when updating
+      ...(this.isNewGame ? {} : { id: this.gameId }),
       title,
       description,
       releaseDate: this.datePipe.transform(releaseDate, 'yyyy-MM-dd'),
@@ -154,30 +126,20 @@ export class EditComponent implements OnInit {
       developerId: developer
     };
 
-    // Dispatch appropriate action based on mode
     const action = this.isNewGame 
       ? GamesActions.addGame({ game: payload as any })
       : GamesActions.updateGame({ game: payload as any });
 
     this.store.dispatch(action);
-    
-    // Listen for the result and navigate on success
     this.actions$.pipe(
       ofType(GamesActions.loadGamesSuccess, GamesActions.addGameFailure, GamesActions.updateGameFailure),
-      take(1)  // Unsubscribe after first emission
+      take(1)
     ).subscribe((result: any) => {
-      if (result.type === GamesActions.loadGamesSuccess.type) {
-        this.router.navigate(['/']);  // Success: go to browse view
-      } else {
-        console.error('Save failed', result.error);  // Failure: log error
-      }
+      if (result.type === GamesActions.loadGamesSuccess.type) this.router.navigate(['/']);
+      else console.error('Save failed', result.error);
     });
   }
 
-  /**
-   * Cancel Handler
-   * Navigate back to browse view without saving
-   */
   onCancel(): void {
     this.router.navigate(['/']);
   }
