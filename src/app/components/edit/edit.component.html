@@ -16,12 +16,16 @@
                 class="form-control"
                 [class.is-invalid]="gameForm.get('title')?.invalid && gameForm.get('title')?.touched"
               />
-              <div class="invalid-feedback" *ngIf="gameForm.get('title')?.errors?.['required']">
-                Title is required.
-              </div>
-              <div class="invalid-feedback" *ngIf="gameForm.get('title')?.errors?.['minlength']">
-                Title must be at least 2 characters.
-              </div>
+              @if (gameForm.get('title')?.errors?.['required']) {
+                <div class="invalid-feedback">
+                  Title is required.
+                </div>
+              }
+              @if (gameForm.get('title')?.errors?.['minlength']) {
+                <div class="invalid-feedback">
+                  Title must be at least 2 characters.
+                </div>
+              }
             </div>
 
             <div class="mb-3">
@@ -33,12 +37,16 @@
                 rows="3"
                 [class.is-invalid]="gameForm.get('description')?.invalid && gameForm.get('description')?.touched"
               ></textarea>
-              <div class="invalid-feedback" *ngIf="gameForm.get('description')?.errors?.['required']">
-                Description is required.
-              </div>
-              <div class="invalid-feedback" *ngIf="gameForm.get('description')?.errors?.['minlength']">
-                Description must be at least 10 characters.
-              </div>
+              @if (gameForm.get('description')?.errors?.['required']) {
+                <div class="invalid-feedback">
+                  Description is required.
+                </div>
+              }
+              @if (gameForm.get('description')?.errors?.['minlength']) {
+                <div class="invalid-feedback">
+                  Description must be at least 10 characters.
+                </div>
+              }
             </div>
 
             <div class="mb-3">
@@ -59,7 +67,9 @@
               <label for="genre" class="form-label">Genre *</label>
               <select id="genre" formControlName="genre" class="form-select" [class.is-invalid]="gameForm.get('genre')?.invalid && gameForm.get('genre')?.touched">
                 <option value="">Select genre</option>
-                <option *ngFor="let g of genres$ | async" [value]="g.id">{{ g.name }}</option>
+                @for (g of genres$ | async; track g.id) {
+                  <option [value]="g.id">{{ g.name }}</option>
+                }
               </select>
               <div class="invalid-feedback">
                 Genre is required.
@@ -70,7 +80,9 @@
               <label for="publisher" class="form-label">Publisher *</label>
               <select id="publisher" formControlName="publisher" class="form-select" [class.is-invalid]="gameForm.get('publisher')?.invalid && gameForm.get('publisher')?.touched">
                 <option value="">Select publisher</option>
-                <option *ngFor="let p of publishers$ | async" [value]="p.id">{{ p.name }}</option>
+                @for (p of publishers$ | async; track p.id) {
+                  <option [value]="p.id">{{ p.name }}</option>
+                }
               </select>
               <div class="invalid-feedback">
                 Publisher is required.
@@ -81,7 +93,9 @@
               <label for="developer" class="form-label">Developer *</label>
               <select id="developer" formControlName="developer" class="form-select" [class.is-invalid]="gameForm.get('developer')?.invalid && gameForm.get('developer')?.touched">
                 <option value="">Select developer</option>
-                <option *ngFor="let d of developers$ | async" [value]="d.id">{{ d.name }}</option>
+                @for (d of developers$ | async; track d.id) {
+                  <option [value]="d.id">{{ d.name }}</option>
+                }
               </select>
               <div class="invalid-feedback">
                 Developer is required.

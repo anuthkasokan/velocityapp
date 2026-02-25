@@ -7,33 +7,37 @@
   </div>
 
   <div class="row">
-    <div class="col-md-6 col-lg-4 mb-4" *ngFor="let game of games$ | async">
-      <div class="card h-100 shadow-sm">
-        <div class="card-body">
-          <h5 class="card-title">{{ game.title }}</h5>
-          <p class="card-text text-muted mb-3 game-description" title="{{ game.description }}">{{ game.description }}</p>
-          <p class="card-text small">
-            <strong>Release Date:</strong> {{ game.releaseDate | date:'yyyy-MM-dd' }}<br>
-            <strong>Genre:</strong> {{ game.genre.name }}<br>
-            <strong>Publisher:</strong> {{ game.publisher.name }}<br>
-            <strong>Developer:</strong> {{ game.developer.name }}
-          </p>
-        </div>
-        <div class="card-footer bg-transparent border-top-0">
-          <div class="d-flex gap-2">
-            <a [routerLink]="['/edit', game.id]" class="btn btn-sm btn-outline-primary flex-fill">
-              Edit
-            </a>
-            <button (click)="deleteGame(game.id)" class="btn btn-sm btn-outline-danger flex-fill">
-              Delete
-            </button>
+    @for (game of games$ | async; track game.id) {
+      <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title">{{ game.title }}</h5>
+            <p class="card-text text-muted mb-3 game-description" title="{{ game.description }}">{{ game.description }}</p>
+            <p class="card-text small">
+              <strong>Release Date:</strong> {{ game.releaseDate | date:'yyyy-MM-dd' }}<br>
+              <strong>Genre:</strong> {{ game.genre.name }}<br>
+              <strong>Publisher:</strong> {{ game.publisher.name }}<br>
+              <strong>Developer:</strong> {{ game.developer.name }}
+            </p>
+          </div>
+          <div class="card-footer bg-transparent border-top-0">
+            <div class="d-flex gap-2">
+              <a [routerLink]="['/edit', game.id]" class="btn btn-sm btn-outline-primary flex-fill">
+                Edit
+              </a>
+              <button (click)="deleteGame(game.id)" class="btn btn-sm btn-outline-danger flex-fill">
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    }
   </div>
 
-  <div *ngIf="(games$ | async)?.length === 0" class="alert alert-info">
-    No games in the catalog yet. <a routerLink="/edit/new">Add your first game!</a>
-  </div>
+  @if ((games$ | async)?.length === 0) {
+    <div class="alert alert-info">
+      No games in the catalog yet. <a routerLink="/edit/new">Add your first game!</a>
+    </div>
+  }
 </div>
